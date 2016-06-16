@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Create htdocs for web root
+mkdir -p /var/www
+chown nginx:nginx /var/www
+
+mkdir -p /var/log/nginx
+touch /var/log/nginx/access.log
+touch /var/log/nginx/error.log
+chown -R nginx:nginx /var/log/nginx
+
+
+mkdir -p /tmp/nginx/client-body
+chown -R nginx /tmp/nginx
