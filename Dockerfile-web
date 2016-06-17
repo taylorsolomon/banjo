@@ -37,7 +37,8 @@ RUN apk --update --repository=http://dl-4.alpinelinux.org/alpine/edge/testing ad
     php7-xmlreader \
     php7-xsl \
     php7-zip \
-    php7-zlib
+    php7-zlib \
+    mysql-client
 
 # Move config files to the right places.
 COPY /config /
@@ -53,15 +54,19 @@ RUN ln -s /etc/php7 /etc/php && \
     ln -s /usr/lib/php7 /usr/lib/php
 
 # Install composer global bin
-# RUN curl -sS https://getcomposer.org/installer | php \
-#     && mv composer.phar /usr/local/bin/composer
-#
-# # Install Drush
+RUN curl -sS https://getcomposer.org/installer | php \
+    && mv composer.phar /usr/local/bin/composer
+
+# Install Drush
 # RUN mkdir -p /opt/drush
 # WORKDIR /opt/drush
 # RUN composer init --require=drush/drush:dev-master --stability=dev -n
 # RUN composer config bin-dir /usr/local/bin
 # RUN composer install
+
+RUN php -r "readfile('http://files.drush.org/drush.phar');" > drush && \
+    chmod +x drush && \
+    mv drush /usr/local/bin
 
 # Add S6-overlay to use S6 process manager
 # https://github.com/just-containers/s6-overlay/#the-docker-way
