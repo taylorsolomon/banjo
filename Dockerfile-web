@@ -1,0 +1,78 @@
+FROM alpine:edge
+MAINTAINER Taylor Solomon <taylor.solomon@me.com>
+
+ENV S6_VERSION v1.17.2.0
+
+# Add testing repo to get latest apk packages
+RUN echo "ipv6" >> /etc/modules
+
+## Add basic stuff
+RUN apk add --update --no-cache curl bash
+
+# Add NGINX-Webserver with NAXSI
+RUN apk --update add \
+    nginx \
+    git \
+    unzip \
+    php5 \
+    php5-ctype \
+    php5-curl \
+    php5-dom \
+    php5-ftp \
+    php5-gd \
+    php5-iconv \
+    php5-json \
+    php5-fpm \
+    php5-mysqli \
+    php5-opcache \
+    php5-openssl \
+    php5-pdo \
+    php5-pdo_mysql \
+    php5-phar \
+    php5-sockets \
+    php5-xml \
+    php5-xmlrpc \
+    php5-xmlreader \
+    php5-xsl \
+    php5-zip \
+    php5-zlib \
+    mysql-client
+
+
+RUN apk --update --repository=http://dl-4.alpinelinux.org/alpine/edge/testing \
+        add shadow
+
+# Move config files to the right places.
+COPY /config /
+
+# Small fixes
+RUN rm -fr /var/cache/apk/*
+RUN usermod -u 1000 nginx
+
+# Symlink php services to useful names
+#RUN ln -s /etc/php5 /etc/php && \
+#    ln -s /usr/bin/php5 /usr/bin/php && \
+#    ln -s /usr/sbin/php-fpm5 /usr/bin/php-fpm && \
+#    ln -s /usr/lib/php5 /usr/lib/php
+
+# Install composer global bin
+RUN curl -sS https://getcomposer.org/installer | php \
+    && mv composer.phar /usr/local/bin/composer
+
+# Install Drush
+RUN php -r "readfile('http://files.drush.org/drush.phar');" > drush && \
+    chmod +x drush && \
+    mv drush /usr/local/bin
+
+# Add S6-overlay to use S6 process manager
+# https://github.com/just-containers/s6-overlay/#the-docker-way
+ADD https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz /tmp/
+RUN gunzip -c /tmp/s6-overlay-amd64.tar.gz | tar -xf - -C /
+
+# Expose Ports
+EXPOSE 443
+EXPOSE 80
+
+VOLUME ["/var/www", "/var/log"]
+
+ENTRYPOINT ["/init"]

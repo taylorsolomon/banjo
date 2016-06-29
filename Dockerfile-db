@@ -1,0 +1,27 @@
+FROM gliderlabs/alpine:edge
+
+EXPOSE 3306
+
+RUN apk add --update \
+    --repository=http://dl-4.alpinelinux.org/alpine/edge/testing \
+    mysql bash shadow && \
+    mkdir -p /var/lib/mysql && \
+    mkdir -p /etc/mysql/conf.d && \
+    { \
+        echo '[mysqld]'; \
+        echo 'user = root'; \
+        echo 'datadir = /var/lib/mysql'; \
+        echo 'port = 3306'; \
+        echo 'log-bin = /var/lib/mysql/mysql-bin'; \
+        echo '!includedir /etc/mysql/conf.d/'; \
+        echo 'bind-address = 0.0.0.0'; \
+    } > /etc/mysql/my.cnf
+
+RUN mkdir -p /run/mysqld
+RUN chown -R mysql:root /run/mysqld
+
+VOLUME ["/var/lib/mysql", "/etc/mysql/conf.d/"]
+
+ENTRYPOINT ["mysqld"]
+
+CMD ["--skip-grant-tables"]
